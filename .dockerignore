@@ -1,0 +1,10 @@
+node_modules
+.git
+.env
+.next
+pgdata
+*.log
+trustgrade-prd.md
+TrustGrade-brief.md
+NOTES.md
+docs/screenshots

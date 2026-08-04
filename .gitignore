@@ -1,0 +1,10 @@
+node_modules/
+.env
+.next/
+pgdata/
+*.log
+
+# Local working documents — never shipped
+trustgrade-prd.md
+TrustGrade-brief.md
+NOTES.md
