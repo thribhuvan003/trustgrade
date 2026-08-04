@@ -1,5 +1,6 @@
-// Tests 1-3 from the PRD, plus the two behaviours approval.js exists to provide:
-// a real audit trail and a version guard that refuses to overwrite.
+// The illegal transitions, the raw SQL attempt the database blocks, and the two
+// things this service adds on top: a real audit trail and a version guard that
+// refuses to overwrite a concurrent reviewer.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { prisma } from '../src/lib/prisma.js';
 import { transition } from '../src/services/approval.js';

@@ -1,4 +1,16 @@
 services:
+  # Builds the image sandbox.js runs student code in. The container itself does
+  # nothing and exits immediately; the built image is the point. Without this,
+  # a fresh clone would start Postgres and then fail every submission with
+  # "image not found".
+  runner-image:
+    build:
+      context: ./sandbox
+      dockerfile: Dockerfile.runner
+    image: trustgrade-runner
+    entrypoint: ["true"]
+    restart: "no"
+
   db:
     image: postgres:16-alpine
     environment:

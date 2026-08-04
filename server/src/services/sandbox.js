@@ -5,8 +5,9 @@ import { randomUUID } from 'node:crypto';
 
 const IMAGE = 'trustgrade-runner';
 const TIME_LIMIT_MS = 5000;
-// Per stream, so the combined worst case is the 64 KB the spec asks for.
-const OUTPUT_CAP = 32 * 1024;
+// One budget shared by stdout and stderr, so a program cannot double it by
+// writing to both.
+const OUTPUT_CAP = 64 * 1024;
 // Base64 on the command line: measured, spawn fails with ENAMETOOLONG past
 // roughly 24 KB of source, so stay well clear of it.
 const MAX_CODE_BYTES = 16 * 1024;

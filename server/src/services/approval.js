@@ -13,9 +13,12 @@ const ALLOWED = {
   REJECTED: [],
 };
 
+// clientMessage marks this as ours to show a reviewer, rather than an internal
+// message that happened to carry a status code.
 function fail(status, message) {
   const error = new Error(message);
   error.status = status;
+  error.clientMessage = message;
   return error;
 }
 
@@ -35,12 +38,7 @@ function checkPayload(to, publishedText, note) {
 }
 
 export async function transition({
-  answerId,
-  to,
-  actorId,
-  expectedVersion,
-  publishedText = null,
-  note = null,
+  answerId, to, actorId, expectedVersion, publishedText = null, note = null,
 }) {
   // Without this, an omitted version silently drops out of the where clause
   // below and the optimistic lock disappears without anyone noticing.
@@ -51,7 +49,6 @@ export async function transition({
   return prisma.$transaction(async (tx) => {
     const answer = await tx.answer.findUnique({ where: { id: answerId } });
     if (!answer) throw fail(404, 'That answer no longer exists.');
-
     if (!ALLOWED[answer.status].includes(to)) {
       throw fail(409, `An answer cannot move from ${answer.status} to ${to}.`);
     }
@@ -67,7 +64,6 @@ export async function transition({
         ...(to === 'APPROVED' ? { publishedText } : {}),
       },
     });
-
     if (changed.count === 0) {
       throw fail(409, 'Another reviewer changed this answer first. Reload it to see their version.');
     }
@@ -75,7 +71,6 @@ export async function transition({
     await tx.answerTransition.create({
       data: { answerId, fromStatus: answer.status, toStatus: to, actorId, note },
     });
-
     return tx.answer.findUnique({ where: { id: answerId } });
   });
 }

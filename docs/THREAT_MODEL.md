@@ -63,5 +63,5 @@ is a defence you do not understand.
 | `--cap-drop ALL`, `no-new-privileges` | Privilege escalation | No capabilities retained |
 | `--user 65534:65534` | Running as root | `uid=65534(nobody)` |
 | Host timer, then `docker rm -f` | Runaway programs | `while True: pass` stopped at ~5.1s |
-| 32 KB cap per stream | Output flooding the server | 10 MB print truncated |
+| 64 KB cap across stdout and stderr | Output flooding the server | 10 MB print truncated |
 | 16 KB source limit | Argument-length crash | Refused before any container starts |
