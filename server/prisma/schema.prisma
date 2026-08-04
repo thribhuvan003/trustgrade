@@ -1,0 +1,129 @@
+// TrustGrade data model. Answer.status is guarded by DB constraints and a
+// BEFORE UPDATE trigger — see migrations/*_add_answer_guards/migration.sql.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+}
+
+enum SubmissionStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum AnswerStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id          String             @id @default(cuid())
+  email       String             @unique
+  name        String
+  role        Role
+  submissions Submission[]
+  doubts      Doubt[]
+  transitions AnswerTransition[]
+}
+
+model Problem {
+  id           String       @id @default(cuid())
+  title        String
+  description  String
+  inputFormat  String
+  outputFormat String
+  constraints  String
+  examples     Json
+  testCases    TestCase[]
+  submissions  Submission[]
+}
+
+model TestCase {
+  id        String  @id @default(cuid())
+  problemId String
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  input     String
+  expected  String
+  hidden    Boolean @default(false)
+}
+
+model Submission {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  problemId String
+  problem   Problem          @relation(fields: [problemId], references: [id])
+  code      String
+  status    SubmissionStatus @default(QUEUED)
+  score     Int              @default(0)
+  passed    Int              @default(0)
+  total     Int              @default(0)
+  results   Json
+  runtimeMs Int              @default(0)
+  createdAt DateTime         @default(now())
+
+  @@index([createdAt])
+}
+
+model Doubt {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  body        String
+  codeSnippet String?
+  createdAt   DateTime @default(now())
+  answers     Answer[]
+}
+
+// aiDraft is written once and never mutated. Teacher edits live in
+// publishedText, so the row always shows what the model said versus
+// what a human actually published.
+//
+// doubtId is deliberately NOT unique. REJECTED is terminal, so a rejected
+// doubt would be permanently unanswerable if it could hold only one answer.
+// A doubt may therefore accumulate several answers over time; the partial
+// unique index in the guards migration is what keeps at most one APPROVED.
+model Answer {
+  id            String             @id @default(cuid())
+  doubtId       String
+  doubt         Doubt              @relation(fields: [doubtId], references: [id], onDelete: Cascade)
+  aiDraft       String
+  publishedText String?
+  status        AnswerStatus       @default(DRAFT)
+  version       Int                @default(0)
+  riskFlags     String[]
+  model         String
+  promptVersion String
+  createdAt     DateTime           @default(now())
+  transitions   AnswerTransition[]
+
+  @@index([doubtId])
+}
+
+model AnswerTransition {
+  id         String       @id @default(cuid())
+  answerId   String
+  answer     Answer       @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  fromStatus AnswerStatus
+  toStatus   AnswerStatus
+  actorId    String
+  actor      User         @relation(fields: [actorId], references: [id])
+  note       String?
+  createdAt  DateTime     @default(now())
+
+  @@index([answerId, createdAt])
+}
