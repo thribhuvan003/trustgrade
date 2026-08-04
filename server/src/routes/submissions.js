@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { currentUser } from '../middleware/role.js';
 import { grade } from '../services/grader.js';
+import { reviewCode } from '../services/llm.js';
 
 const router = Router();
 
@@ -89,6 +90,19 @@ router.post('/', async (req, res) => {
   });
 
   return res.status(201).json(saved);
+});
+
+// Advisory only. This never touches the stored score, and the lookup is scoped
+// to the caller so one student cannot request feedback on another's work.
+router.post('/:id/feedback', async (req, res) => {
+  const user = await currentUser(req);
+  const submission = await prisma.submission.findFirst({
+    where: { id: req.params.id, userId: user.id },
+    select: { code: true },
+  });
+
+  if (!submission) throw reject(404, 'That submission does not exist.');
+  return res.json(await reviewCode(submission.code));
 });
 
 router.get('/', async (req, res) => {

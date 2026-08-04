@@ -104,7 +104,7 @@ function verdictFor(exitCode, timedOut, oomKilled) {
 }
 
 const tooLarge = () => ({
-  stdout: '', stderr: 'The program is larger than the 16 KB limit and was not run.',
+  stdout: '', stderr: 'That program is longer than the 16 KB limit. Nothing was run.',
   exitCode: -1, timedOut: false, truncated: false, runtimeMs: 0,
   verdict: 'SOURCE_TOO_LARGE',
 });

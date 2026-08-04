@@ -1,12 +1,14 @@
 import express from 'express';
 import problems from './routes/problems.js';
 import submissions from './routes/submissions.js';
+import doubts from './routes/doubts.js';
 
 export const app = express();
 
 app.use(express.json({ limit: '256kb' }));
 app.use('/api/problems', problems);
 app.use('/api/submissions', submissions);
+app.use('/api/doubts', doubts);
 
 const FALLBACK = {
   400: 'That request was not something we could read. Nothing was saved.',
