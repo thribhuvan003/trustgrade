@@ -8,3 +8,7 @@ pgdata/
 trustgrade-prd.md
 TrustGrade-brief.md
 NOTES.md
+
+# Scratch files from review runs, never part of the suite
+server/tests/_*
+_*.mjs
