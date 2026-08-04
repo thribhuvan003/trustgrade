@@ -2,7 +2,9 @@
 // things this service adds on top: a real audit trail and a version guard that
 // refuses to overwrite a concurrent reviewer.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import request from 'supertest';
 import { prisma } from '../src/lib/prisma.js';
+import { app } from '../src/index.js';
 import { transition } from '../src/services/approval.js';
 
 const EMAIL = 'approval-test@trustgrade.test';
@@ -90,6 +92,40 @@ describe('answer approval', () => {
     });
     expect(trail.map((t) => `${t.fromStatus}->${t.toStatus}`))
       .toEqual(['DRAFT->PENDING_REVIEW', 'PENDING_REVIEW->APPROVED']);
+  });
+
+  it('refuses a student who tries to approve an answer', async () => {
+    const draft = await newDraft();
+    const pending = await transition({
+      answerId: draft.id, to: 'PENDING_REVIEW', actorId: teacherId, expectedVersion: draft.version,
+    });
+
+    const refused = await request(app)
+      .post(`/api/review/${draft.id}/approve`)
+      .set('x-demo-role', 'STUDENT')
+      .send({ publishedText: 'Approving my own answer.', version: pending.version });
+
+    expect(refused.status).toBe(403);
+    expect(refused.body.error).toMatch(/Only a teacher/);
+
+    const after = await prisma.answer.findUnique({ where: { id: draft.id } });
+    expect(after.status).toBe('PENDING_REVIEW');
+    expect(after.publishedText).toBeNull();
+  });
+
+  it('lets a teacher approve the same answer', async () => {
+    const draft = await newDraft();
+    const pending = await transition({
+      answerId: draft.id, to: 'PENDING_REVIEW', actorId: teacherId, expectedVersion: draft.version,
+    });
+
+    const approved = await request(app)
+      .post(`/api/review/${draft.id}/approve`)
+      .set('x-demo-role', 'TEACHER')
+      .send({ publishedText: 'Reviewed and published.', version: pending.version });
+
+    expect(approved.status).toBe(200);
+    expect(approved.body.status).toBe('APPROVED');
   });
 
   it('refuses a stale version instead of overwriting another reviewer', async () => {

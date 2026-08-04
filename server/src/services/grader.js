@@ -1,23 +1,21 @@
 // Test cases decide the score. Nothing else does, and no model is consulted.
 import { runInSandbox } from './sandbox.js';
+import { httpError } from '../lib/errors.js';
+
+// Docker being unreachable is reported as exit code -1 with the sandbox's own
+// marker on stderr. Scoring that would write our outage into a student's record
+// as their failure.
+const sandboxUnavailable = (run) => run.exitCode === -1 && run.stderr.startsWith('[sandbox]');
 
 // One container at a time. Running them together would let a heavy test steal
 // CPU from its neighbours, and a borderline program's verdict would start
 // depending on what else happened to be running.
-// If docker itself is unreachable the sandbox reports exit code -1 with its own
-// marker on stderr. Scoring that would write our outage into a student's record
-// as their failure, so it stops the grade instead.
-const sandboxUnavailable = (run) => run.exitCode === -1 && run.stderr.startsWith('[sandbox]');
-
 export async function grade(code, testCases) {
   const results = [];
   for (const test of testCases) {
     const run = await runInSandbox(code, test.input);
     if (sandboxUnavailable(run)) {
-      const error = new Error('The grading sandbox is unavailable, so this was not scored. Try again shortly.');
-      error.status = 503;
-      error.clientMessage = error.message;
-      throw error;
+      throw httpError(503, 'The grading sandbox is unavailable, so this was not scored. Try again shortly.');
     }
     results.push(judge(test, run));
   }

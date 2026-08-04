@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
+import { httpError } from '../lib/errors.js';
 import { currentUser } from '../middleware/role.js';
 import { answerDoubt } from '../services/llm.js';
 import { transition } from '../services/approval.js';
@@ -13,11 +14,14 @@ const posted = z.object({
   codeSnippet: z.string().max(8 * 1024).nullish(),
 }).strict();
 
-function reject(status, message) {
-  const error = new Error(message);
-  error.status = status;
-  error.clientMessage = message;
-  return error;
+// One message per failure. Telling a student their title is missing when their
+// code snippet was too long sends them looking in the wrong place.
+function explain(issue) {
+  if (issue.code === 'unrecognized_keys') return 'That doubt carries fields we do not accept. Nothing was saved.';
+  if (issue.path[0] === 'title') return 'A doubt needs a title. Nothing was saved.';
+  if (issue.path[0] === 'codeSnippet') return 'That code snippet is longer than the 8 KB limit. Nothing was saved.';
+  if (issue.code === 'too_big') return 'That question is longer than the 8 KB limit. Nothing was saved.';
+  return 'A doubt needs a question. Nothing was saved.';
 }
 
 // A doubt is answered by whichever answer reached APPROVED. Anything still in
@@ -49,7 +53,7 @@ const strip = ({ id, title, body, codeSnippet, createdAt, user }) => ({
 // yet. Only approval.js moves it, and it stops at PENDING_REVIEW.
 router.post('/', async (req, res) => {
   const parsed = posted.safeParse(req.body);
-  if (!parsed.success) throw reject(400, 'A doubt needs a title and a question. Nothing was saved.');
+  if (!parsed.success) throw httpError(400, explain(parsed.error.issues[0]));
 
   const user = await currentUser(req);
   const doubt = await prisma.doubt.create({ data: { ...parsed.data, userId: user.id } });

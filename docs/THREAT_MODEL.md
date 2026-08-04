@@ -52,6 +52,32 @@ is a defence you do not understand.
   removes containers a previous one left behind before running anything. The stranded
   container above was cleared by the next process start, verified.
 
+## Prompt injection
+
+Four layers, and only the last one is load bearing.
+
+1. Length and shape validation on what a student submits.
+2. A risk scan over the student's text, logged for the reviewing teacher.
+3. The untrusted block is delimited and the model is told not to follow it.
+4. **A human approves before anything is published.**
+
+The regex list is deliberately described as secondary, because it is. Six injection
+phrasings were tried against it and **four defeated it entirely** — a synonym-only
+rewrite, zero-width characters inserted mid-word, a base64 payload, and letters spaced
+apart all produced no flags at all. Every one of them still ended `PENDING_REVIEW` with
+no published text, because the flags decide what a teacher is warned about, not what
+reaches a student.
+
+What actually holds: the model has no tools, no database access, and no route to approval.
+Its output is a string written to a row that a Postgres trigger will not move to `APPROVED`
+without a teacher, over a connection the model does not have. A student calling the approve,
+reject, or queue endpoints receives 403 in all three cases, verified.
+
+Also verified: `__proto__` and `constructor.prototype` sent as raw JSON leave
+`Object.prototype` untouched, and a body larger than the prompt fence is rejected at
+validation rather than truncated, so the closing delimiter cannot be pushed out of the
+prompt.
+
 ## Sandbox controls
 
 | Control | Risk reduced | Observed |

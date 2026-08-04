@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
+import { httpError } from '../lib/errors.js';
 
 const router = Router();
 
@@ -17,7 +18,7 @@ router.get('/:id', async (req, res) => {
     },
   });
 
-  if (!problem) return res.status(404).json({ error: 'That problem does not exist.' });
+  if (!problem) throw httpError(404, 'That problem does not exist.');
   return res.json(problem);
 });
 

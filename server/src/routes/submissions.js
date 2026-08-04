@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
+import { httpError } from '../lib/errors.js';
 import { currentUser } from '../middleware/role.js';
 import { grade } from '../services/grader.js';
 import { reviewCode } from '../services/llm.js';
@@ -17,13 +18,6 @@ const submission = z.object({
   code: z.string().min(1).refine((value) => Buffer.byteLength(value, 'utf8') <= MAX_CODE_BYTES, 'too long'),
 }).strict();
 
-function reject(status, message) {
-  const error = new Error(message);
-  error.status = status;
-  error.clientMessage = message;
-  return error;
-}
-
 // One message per failure. "That request was invalid" tells a student nothing
 // about what to change.
 function explain(issue) {
@@ -36,14 +30,14 @@ function explain(issue) {
 function parse(body) {
   const result = submission.safeParse(body);
   if (result.success) return result.data;
-  throw reject(400, explain(result.error.issues[0]));
+  throw httpError(400, explain(result.error.issues[0]));
 }
 
 async function testCasesFor(problemId, visibleOnly) {
   const where = visibleOnly ? { problemId, hidden: false } : { problemId };
   const cases = await prisma.testCase.findMany({ where, orderBy: { id: 'asc' } });
 
-  if (cases.length === 0) throw reject(404, 'That problem does not exist, or has no test cases. Nothing was run.');
+  if (cases.length === 0) throw httpError(404, 'That problem does not exist, or has no test cases. Nothing was run.');
   return cases;
 }
 
@@ -101,7 +95,7 @@ router.post('/:id/feedback', async (req, res) => {
     select: { code: true },
   });
 
-  if (!submission) throw reject(404, 'That submission does not exist.');
+  if (!submission) throw httpError(404, 'That submission does not exist.');
   return res.json(await reviewCode(submission.code));
 });
 

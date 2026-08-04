@@ -5,6 +5,7 @@
 // clear 409 instead of a database error, and so every accepted change leaves an
 // AnswerTransition row behind.
 import { prisma } from '../lib/prisma.js';
+import { httpError } from '../lib/errors.js';
 
 const ALLOWED = {
   DRAFT: ['PENDING_REVIEW'],
@@ -12,15 +13,6 @@ const ALLOWED = {
   APPROVED: [],
   REJECTED: [],
 };
-
-// clientMessage marks this as ours to show a reviewer, rather than an internal
-// message that happened to carry a status code.
-function fail(status, message) {
-  const error = new Error(message);
-  error.status = status;
-  error.clientMessage = message;
-  return error;
-}
 
 function isText(value) {
   return typeof value === 'string' && value.trim().length > 0;
@@ -30,10 +22,10 @@ function isText(value) {
 // Rejecting is feedback to a teacher, so it must carry a reason.
 function checkPayload(to, publishedText, note) {
   if (to === 'APPROVED' && !isText(publishedText)) {
-    throw fail(400, 'An approved answer needs published text. Nothing was saved.');
+    throw httpError(400, 'An approved answer needs published text. Nothing was saved.');
   }
   if (to === 'REJECTED' && !isText(note)) {
-    throw fail(400, 'A rejected answer needs a reason. Nothing was saved.');
+    throw httpError(400, 'A rejected answer needs a reason. Nothing was saved.');
   }
 }
 
@@ -43,14 +35,14 @@ export async function transition({
   // Without this, an omitted version silently drops out of the where clause
   // below and the optimistic lock disappears without anyone noticing.
   if (!Number.isInteger(expectedVersion)) {
-    throw fail(400, 'A version number is required so a concurrent edit can be detected. Nothing was saved.');
+    throw httpError(400, 'A version number is required so a concurrent edit can be detected. Nothing was saved.');
   }
 
   return prisma.$transaction(async (tx) => {
     const answer = await tx.answer.findUnique({ where: { id: answerId } });
-    if (!answer) throw fail(404, 'That answer no longer exists.');
+    if (!answer) throw httpError(404, 'That answer no longer exists.');
     if (!ALLOWED[answer.status].includes(to)) {
-      throw fail(409, `An answer cannot move from ${answer.status} to ${to}.`);
+      throw httpError(409, `An answer cannot move from ${answer.status} to ${to}.`);
     }
     checkPayload(to, publishedText, note);
 
@@ -65,7 +57,7 @@ export async function transition({
       },
     });
     if (changed.count === 0) {
-      throw fail(409, 'Another reviewer changed this answer first. Reload it to see their version.');
+      throw httpError(409, 'Another reviewer changed this answer first. Reload it to see their version.');
     }
 
     await tx.answerTransition.create({

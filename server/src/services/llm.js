@@ -33,7 +33,7 @@ const RISKS = [
   ['approval manipulation', /mark[\s\S]{0,24}approved|approve\s+(this|it)|auto[-\s]?approve|set\s+status|publish\s+(this|it)/i],
 ];
 
-export function scanForRisk(text) {
+function scanForRisk(text) {
   return RISKS.filter(([, pattern]) => pattern.test(text)).map(([label]) => label);
 }
 
@@ -96,12 +96,8 @@ async function ask(system, user, schema) {
 // Every path returns the same shape, so callers never branch on whether the
 // model answered. Grading and the doubt board work with it entirely offline.
 function result(draft, riskFlags, usedModel) {
-  return {
-    draft,
-    riskFlags,
-    model: usedModel ? (process.env.LLM_MODEL ?? 'unknown') : 'none',
-    promptVersion: PROMPT_VERSION,
-  };
+  const model = usedModel ? (process.env.LLM_MODEL ?? 'unknown') : 'none';
+  return { draft, riskFlags, model, promptVersion: PROMPT_VERSION };
 }
 
 const OFFLINE_DOUBT = 'No draft was generated. A teacher will answer this question directly.';
