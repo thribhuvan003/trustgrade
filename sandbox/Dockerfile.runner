@@ -1,0 +1,22 @@
+# Disposable runner for one student program.
+#
+# Nothing is added to the base image. The runner needs Python and nothing else,
+# and every extra binary is one more thing an untrusted program could call.
+FROM python:3.11-alpine
+
+# 65534 is nobody:nogroup, matching the --user flag sandbox.js passes.
+USER 65534:65534
+
+# The program arrives base64 encoded in an environment variable and is decoded
+# into /tmp, which sandbox.js mounts as a small writable tmpfs.
+#
+# It cannot arrive as a file instead: "docker cp" writes through the container
+# filesystem layer, which --read-only rejects outright, and a bind mount would
+# be resolved by the host daemon rather than by the server container that wrote
+# the file. The tmpfs is noexec, which does not matter because Python reads the
+# program as data rather than executing the file itself.
+#
+# -I  isolated mode: ignore environment variables and the user site directory
+# -B  never write .pyc files, which the read-only filesystem would reject
+# -u  unbuffered output, so anything printed before a timeout kill is not lost
+ENTRYPOINT ["sh", "-c", "printf '%s' \"$TRUSTGRADE_CODE_B64\" | base64 -d > /tmp/solution.py && exec python3 -I -B -u /tmp/solution.py"]

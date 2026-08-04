@@ -5,7 +5,8 @@
   "scripts": {
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
-    "test": "vitest run"
+    "test": "vitest run",
+    "attack": "node tests/attack.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
