@@ -11,10 +11,11 @@ application is bypassed entirely.
 **Live demo:** <https://trustgrade.vercel.app>
 
 Everything on that link is live, grading included. The same Express app runs on a small EC2
-instance with its own Docker daemon, because no managed platform gives a container one, and
-the frontend talks only to that host — one API, one database, so what a submission writes is
-what the history reads. If the host is ever unreachable the site still loads and the
-workspace says grading is off rather than failing after a click.
+instance with its own Docker daemon, because no managed platform gives a container one, with
+CloudFront in front of it for TLS. The frontend talks only to that host — one API, one
+database, so what a submission writes is what the history reads. If the host is ever
+unreachable the site still loads and the workspace says grading is off rather than failing
+after a click.
 
 Running it locally, two minutes below, is the same application with nothing removed.
 
@@ -224,6 +225,10 @@ reads is single-digit-to-low-double-digit milliseconds.
 - The public demo does execute submitted code. The controls are the container flags in the
   table above and nothing more: there is no queue, no per-user quota and no abuse
   monitoring, which a real deployment of this would need before it faced the internet.
+- Viewers reach the API over HTTPS, but **CloudFront talks to the instance over plain HTTP**
+  on port 4000, which is also still open to the internet directly. Terminating TLS at the
+  edge was the cheap way to stop a browser blocking the call; a real deployment would put a
+  certificate on the origin and restrict that port to CloudFront's prefix list.
 - The deployed site depends on that single host being reachable. If it is not, the workspace
   says grading is off rather than breaking, but the board and the review queue go with it.
 - **`docker compose up` starts Postgres and builds the sandbox image; it does not start the
