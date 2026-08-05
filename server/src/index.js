@@ -24,7 +24,7 @@ app.use('/api/review', review);
 
 const FALLBACK = {
   400: 'That request was not something we could read. Nothing was saved.',
-  404: 'That does not exist.',
+  404: 'That does not exist. Check the address and try again.',
   500: 'Something went wrong on the server. Nothing was saved. Try again.',
 };
 

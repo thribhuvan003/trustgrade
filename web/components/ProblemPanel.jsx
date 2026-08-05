@@ -24,7 +24,7 @@ export default function ProblemPanel({ problem }) {
       ))}
 
       <p className="mt-7 rounded border border-border bg-surface2 p-3 text-[13px] leading-relaxed text-text2">
-        Your score is determined only by test cases. AI feedback does not affect your grade.
+        Your score is determined only by test cases. AI feedback does not affect your score.
       </p>
     </>
   );

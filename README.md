@@ -133,7 +133,8 @@ flagged when the model is entirely absent.
 
 ## Test evidence
 
-Observed, not asserted. `npm test` and `npm run attack` reproduce all of it.
+Observed, not asserted. `npm test` and `npm run attack` reproduce every count below.
+The timings under them were measured by hand on one machine and will differ on yours.
 
 - **15 automated tests pass**, covering the six required cases: `DRAFT → APPROVED` throws,
   `APPROVED → PENDING_REVIEW` throws, raw SQL is blocked by the trigger, a student calling

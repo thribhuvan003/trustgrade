@@ -1,5 +1,7 @@
-// TrustGrade data model. Answer.status is guarded by DB constraints and a
-// BEFORE UPDATE trigger — see migrations/*_add_answer_guards/migration.sql.
+// TrustGrade data model. Answer.status is guarded by database constraints and a
+// BEFORE INSERT OR UPDATE trigger. The INSERT arm is what stops a forged
+// approved row being inserted directly. See
+// migrations/*_add_answer_guards/migration.sql.
 
 generator client {
   provider = "prisma-client-js"

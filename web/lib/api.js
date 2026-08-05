@@ -31,7 +31,9 @@ async function call(path, options = {}) {
   const body = await response.json().catch(() => null);
   // The server always sends { error } with a real status, so the message it
   // wrote is the one worth showing.
-  if (!response.ok) throw new Error(body?.error ?? 'The server could not be reached.');
+  // A reply arrived but carried no message we wrote, so say that rather than
+  // reusing the wording for a server that never answered at all.
+  if (!response.ok) throw new Error(body?.error ?? 'The server sent back something we could not read. Nothing was saved.');
   return body;
 }
 

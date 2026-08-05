@@ -62,13 +62,12 @@ export default function ReviewPage() {
       setDone(kind === 'approve'
         ? 'This answer is now visible to students.'
         : 'This draft remains hidden from students.');
-      await load();
     } catch (failure) {
       setError(failure.message);
-      // A conflict means the queue is out of date, so reload it rather than
-      // leaving a row that can only ever fail again.
-      await load();
     } finally {
+      // Reload either way: on success the queue has changed, and on a conflict
+      // it was already out of date.
+      await load();
       setBusy(false);
     }
   }
@@ -130,12 +129,12 @@ export default function ReviewPage() {
       onDecide={decide}
     />
   ) : (
-    // Deciding the last answer empties the queue. Without this the panel
+    // Deciding the last answer empties the queue, and without this the panel
     // unmounts and the teacher never sees what happened to it.
     <div className="h-full border-l border-border px-6 py-5">
-      {done
-        ? <p className="text-[13px] leading-relaxed text-success">{done}</p>
-        : <p className="text-[13px] text-muted">Nothing selected.</p>}
+      <p className={`text-[13px] leading-relaxed ${done ? 'text-success' : 'text-muted'}`}>
+        {done ?? 'Nothing selected.'}
+      </p>
     </div>
   );
 

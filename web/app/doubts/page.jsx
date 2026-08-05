@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { getDoubts, askDoubt } from '../../lib/api';
 import DoubtRow from '../../components/DoubtRow';
 
-
 export default function DoubtsPage() {
   const [doubts, setDoubts] = useState(null);
   const [loadError, setLoadError] = useState(null);

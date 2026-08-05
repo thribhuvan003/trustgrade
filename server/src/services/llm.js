@@ -25,8 +25,8 @@ const doubtAnswer = z.object({
   confidence,
 }).strict();
 
-// Logged on every answer, never blocking on their own. The containment argument
-// is what actually holds; this list is a signal for the reviewing teacher.
+// Logged on every answer; on their own they block nothing. Containment is what
+// actually holds. This list is a signal for the reviewing teacher.
 const RISKS = [
   ['instruction override', /ignore\s+(all\s+)?(previous|prior|earlier|above)|disregard[\s\S]{0,24}instructions|forget\s+(everything|your|all)/i],
   ['prompt extraction', /system\s+prompt|your\s+instructions|reveal[\s\S]{0,24}prompt|repeat[\s\S]{0,24}(prompt|instructions)/i],
