@@ -47,6 +47,10 @@ export default function SolvePage() {
       setOutcome({ ...(await call(PROBLEM_ID, code)), kind });
       if (kind === 'submit') setFeedback(null);
     } catch (error) {
+      // Leaving the previous run on screen makes a refused attempt look scored:
+      // submit an empty editor and the last score sits there under the error.
+      setOutcome(null);
+      setFeedback(null);
       setActionError(error.message);
     } finally {
       setBusy(null);
