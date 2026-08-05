@@ -10,11 +10,13 @@ USER 65534:65534
 # The program arrives base64 encoded in an environment variable and is decoded
 # into /tmp, which sandbox.js mounts as a small writable tmpfs.
 #
-# It cannot arrive as a file instead: "docker cp" writes through the container
-# filesystem layer, which --read-only rejects outright, and a bind mount would
-# be resolved by the host daemon rather than by the server container that wrote
-# the file. The tmpfs is noexec, which does not matter because Python reads the
-# program as data rather than executing the file itself.
+# It cannot arrive as a file: "docker cp" writes through the container
+# filesystem layer, which --read-only rejects outright with "container rootfs is
+# marked read-only" -- observed, not assumed. A bind mount would work while the
+# server runs on the host, but ties the runner to wherever the server happens to
+# live, and breaks the moment the server is containerised. The tmpfs is noexec,
+# which does not matter because Python reads the program as data rather than
+# executing the file itself.
 #
 # -I  isolated mode: ignore environment variables and the user site directory
 # -B  never write .pyc files, which the read-only filesystem would reject

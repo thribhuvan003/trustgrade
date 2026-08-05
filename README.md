@@ -168,6 +168,10 @@ submission takes about 3 s because it runs five real containers.
   password anywhere in this project.
 - No public deployment. Exposing an arbitrary-code execution service needs production
   controls beyond this scope.
+- **`docker compose up` starts Postgres and builds the sandbox image; it does not start the
+  API or the web app.** Those run with `npm run dev`, as the setup steps above show. The API
+  spawns sandbox containers directly on the host daemon, which keeps the runner independent
+  of where the server itself is running.
 - No claim of complete prompt-injection prevention.
 - `QUEUED` and `RUNNING` exist in `SubmissionStatus` because the data model names them, but
   grading is synchronous so the code never produces them.
