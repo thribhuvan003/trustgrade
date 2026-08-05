@@ -1,7 +1,7 @@
 import StatusBadge, { outcomeOf } from './StatusBadge';
 
 
-export default function TestResults({ outcome, busy }) {
+export default function TestResults({ outcome, busy, error }) {
   if (busy === 'run' || busy === 'submit') {
     return (
       <p className="text-[13px] text-text2">
@@ -11,7 +11,10 @@ export default function TestResults({ outcome, busy }) {
     );
   }
 
+  // The console already shows the error. Inviting the student to run the tests
+  // directly underneath it would contradict what just happened.
   if (!outcome) {
+    if (error) return null;
     return (
       <p className="text-[13px] text-muted">
         Run the visible tests while you work, or submit to be graded against every case.

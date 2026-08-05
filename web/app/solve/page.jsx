@@ -7,6 +7,8 @@ import ResultConsole from '../../components/ResultConsole';
 import SplitPane from '../../components/SplitPane';
 
 const PROBLEM_ID = 'longest-stable-segment';
+// False only on the hosted build, where there is no Docker daemon to run code in.
+const SANDBOX_AVAILABLE = process.env.NEXT_PUBLIC_SANDBOX_AVAILABLE !== 'false';
 
 const STARTER = `import sys
 
@@ -71,6 +73,15 @@ export default function SolvePage() {
 
   const workspace = (
     <div className="flex h-full min-h-0 flex-col border-l border-border">
+      {!SANDBOX_AVAILABLE && (
+        <p className="shrink-0 border-b border-border bg-warn-soft px-6 py-2.5 text-[12px] leading-relaxed text-warn">
+          This hosted copy has no Docker daemon, so code is not executed here and Run and Submit
+          will not score. Everything else works: the doubt board, the AI drafts and the teacher
+          review. Clone the repository and run <span className="font-mono">docker compose up</span> to
+          grade for real.
+        </p>
+      )}
+
       <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-3">
         <div className="font-mono text-[12px] text-text2">
           solution.py <span className="text-muted">· Python 3.11</span>

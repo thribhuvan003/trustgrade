@@ -23,9 +23,9 @@ export default function ResultConsole({ outcome, feedback, busy, error, onAskFee
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-5">
-        {error && <p className="mb-3 text-[13px] text-danger">{error}</p>}
+        {error && <p className="mb-3 text-[13px] leading-relaxed text-danger">{error}</p>}
         {tab === 'tests' ? (
-          <TestResults outcome={outcome} busy={busy} />
+          <TestResults outcome={outcome} busy={busy} error={error} />
         ) : (
           <AIFeedback
             feedback={feedback}
