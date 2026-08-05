@@ -15,7 +15,8 @@ export async function grade(code, testCases) {
   for (const test of testCases) {
     const run = await runInSandbox(code, test.input);
     if (sandboxUnavailable(run)) {
-      throw httpError(503, 'The grading sandbox is unavailable, so this was not scored. Try again shortly.');
+      throw httpError(503, 'Running code needs a Docker daemon and none is reachable, so this was '
+        + 'not scored. The hosted demo has no daemon; clone the repository to grade submissions.');
     }
     results.push(judge(test, run));
   }
