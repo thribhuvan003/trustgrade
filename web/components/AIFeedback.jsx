@@ -1,3 +1,8 @@
+'use client';
+
+import { useState } from 'react';
+import { getFeedback } from '../lib/api';
+
 const SEVERITY = { high: 'text-danger', medium: 'text-warn', low: 'text-text2' };
 
 export default function AIFeedback({ feedback, busy, canAsk, onAsk }) {
@@ -68,6 +73,33 @@ function Section({ heading, children }) {
     <div className="mt-5">
       <h3 className="font-mono text-[11px] uppercase tracking-wide text-muted">{heading}</h3>
       <p className="mt-1 text-[13px] leading-relaxed text-text2">{children}</p>
+    </div>
+  );
+}
+
+// Feedback on work already submitted. This is the only way to reach it wherever
+// code cannot be run, which is anywhere without a Docker daemon.
+export function SubmissionAdvice({ submissionId }) {
+  const [feedback, setFeedback] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function ask() {
+    setBusy(true);
+    setError(null);
+    try {
+      setFeedback(await getFeedback(submissionId));
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 border-t border-border pt-3">
+      <AIFeedback feedback={feedback} busy={busy} canAsk onAsk={ask} />
+      {error && <p className="mt-2 text-[13px] text-danger">{error}</p>}
     </div>
   );
 }

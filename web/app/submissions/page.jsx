@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getSubmissions } from '../../lib/api';
 import StatusBadge, { outcomeOf, submissionOutcome } from '../../components/StatusBadge';
+import { SubmissionAdvice } from '../../components/AIFeedback';
 
 export default function SubmissionsPage() {
   const [submissions, setSubmissions] = useState(null);
@@ -129,6 +130,8 @@ function SubmissionDetail({ submission }) {
           ))}
         </ul>
       )}
+
+      <SubmissionAdvice submissionId={submission.id} />
     </div>
   );
 }
