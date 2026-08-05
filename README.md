@@ -146,8 +146,20 @@ Observed, not asserted. `npm test` and `npm run attack` reproduce all of it.
 - The raw-SQL test was **mutation-checked**: disabling the trigger makes it fail, so it is
   detecting the guard rather than passing vacuously.
 
-Measured latency: reads are 5–23 ms; client-side page switches 93–155 ms; a graded
-submission takes 3–5 s because it runs five real containers.
+Measured on a production build:
+
+| | |
+|---|---|
+| API reads | 5–23 ms median (`/problems` 5 ms, `/submissions` 13 ms, `/doubts` 23 ms at 60 rows) |
+| First contentful paint | 92–168 ms |
+| Full page load, data included | 700–922 ms |
+| Client-side navigation | 125–261 ms |
+| Transferred per page | ~569 KB, of which 477 KB is the React and Next runtime |
+| A graded submission | 3–5 s, because it runs five real containers |
+
+Grading is the only slow path and it is honestly slow: it executes real code in real
+containers, so a three-second floor is the work, not the overhead. Everything a student
+reads is single-digit-to-low-double-digit milliseconds.
 
 ### Known limitations
 
