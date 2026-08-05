@@ -8,6 +8,11 @@ An AI-assisted code grading and doubt-resolution portal, built around one rule:
 The service layer enforces that rule, and so does the database, so it holds even when the
 application is bypassed entirely.
 
+**Live demo:** <https://trustgrade.vercel.app> — the doubt board, the AI drafts, the teacher
+review and the approval workflow all run there. **Code execution does not**, because no
+managed host gives a container a Docker daemon, and the workspace says so before you press
+anything. Grading is real when you run it locally, which takes about two minutes below.
+
 ## Review in five minutes
 
 ```bash
