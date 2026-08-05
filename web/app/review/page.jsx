@@ -129,7 +129,15 @@ export default function ReviewPage() {
       onNoteChange={setNote}
       onDecide={decide}
     />
-  ) : <div className="h-full border-l border-border" />;
+  ) : (
+    // Deciding the last answer empties the queue. Without this the panel
+    // unmounts and the teacher never sees what happened to it.
+    <div className="h-full border-l border-border px-6 py-5">
+      {done
+        ? <p className="text-[13px] leading-relaxed text-success">{done}</p>
+        : <p className="text-[13px] text-muted">Nothing selected.</p>}
+    </div>
+  );
 
   return (
     <SplitPane
