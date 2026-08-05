@@ -8,10 +8,15 @@ An AI-assisted code grading and doubt-resolution portal, built around one rule:
 The service layer enforces that rule, and so does the database, so it holds even when the
 application is bypassed entirely.
 
-**Live demo:** <https://trustgrade.vercel.app> — the doubt board, the AI drafts, the teacher
-review and the approval workflow all run there. **Code execution does not**, because no
-managed host gives a container a Docker daemon, and the workspace says so before you press
-anything. Grading is real when you run it locally, which takes about two minutes below.
+**Live demo:** <https://trustgrade.vercel.app>
+
+The board, the AI drafts, the teacher review and the approval workflow are served by an
+always-on API. Running code is not, because no managed host gives a container its own Docker
+daemon, so grading is routed to a machine that has one. When that machine is reachable the
+live site grades for real; when it is not, everything else still works and the workspace
+says grading is off rather than failing after a click. Both paths share one database.
+
+Running it locally, two minutes below, gives you the whole thing with no split at all.
 
 ## Review in five minutes
 
@@ -49,6 +54,10 @@ browser ──x-demo-role──▶ Express :4000 ──▶ Postgres :5432
                               │               read-only root, no capabilities
                               │
                               └──▶ an OpenAI-compatible endpoint (optional)
+
+Locally that is one process. Deployed, the same Express app runs twice against one database:
+once on a managed host for everything, and once on a machine with a Docker daemon that
+serves only the two grading routes.
 ```
 
 Trust boundaries: student code is fully untrusted and only ever runs in a container;
@@ -191,9 +200,9 @@ reads is single-digit-to-low-double-digit milliseconds.
   password anywhere in this project.
 - No public deployment. Exposing an arbitrary-code execution service needs production
   controls beyond this scope.
-- The deployed instance runs everything except code execution. No managed host gives a
-  container a Docker daemon, so a submission there returns "The grading sandbox is
-  unavailable" rather than a score. Grading works locally, and the demo video shows it.
+- Grading on the deployed site depends on a separate machine being reachable, because a
+  managed host cannot run containers. Everything else is served by the always-on API, so the
+  site degrades to "grading is off" rather than breaking. Locally there is no such split.
 - **`docker compose up` starts Postgres and builds the sandbox image; it does not start the
   API or the web app.** Those run with `npm run dev`, as the setup steps above show. The API
   spawns sandbox containers directly on the host daemon, which keeps the runner independent
