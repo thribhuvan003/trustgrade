@@ -1,0 +1,6 @@
+.next/
+node_modules/
+
+# Written by `next dev` on every run, not part of this project
+AGENTS.md
+CLAUDE.md

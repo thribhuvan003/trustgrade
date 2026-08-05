@@ -1,0 +1,121 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { getProblem, runVisibleTests, submitSolution, getFeedback } from '../../lib/api';
+import ProblemPanel from '../../components/ProblemPanel';
+import ResultConsole from '../../components/ResultConsole';
+import SplitPane from '../../components/SplitPane';
+
+const PROBLEM_ID = 'longest-stable-segment';
+
+const STARTER = `import sys
+
+data = sys.stdin.read().split()
+n, limit = int(data[0]), int(data[1])
+values = list(map(int, data[2:2 + n]))
+
+# Return the length of the longest run where max - min <= limit.
+print(0)
+`;
+
+export default function SolvePage() {
+  const [problem, setProblem] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+  const [code, setCode] = useState(STARTER);
+  const [busy, setBusy] = useState(null);
+  const [outcome, setOutcome] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [actionError, setActionError] = useState(null);
+
+  useEffect(() => {
+    getProblem(PROBLEM_ID).then(setProblem).catch((error) => setLoadError(error.message));
+  }, []);
+
+  async function act(kind) {
+    setBusy(kind);
+    setActionError(null);
+    try {
+      const call = kind === 'run' ? runVisibleTests : submitSolution;
+      setOutcome({ ...(await call(PROBLEM_ID, code)), kind });
+      if (kind === 'submit') setFeedback(null);
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function askForFeedback() {
+    setBusy('feedback');
+    try {
+      setFeedback(await getFeedback(outcome.id));
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (loadError) return <p className="p-8 text-[14px] text-danger">{loadError}</p>;
+  if (!problem) return <p className="p-8 text-[14px] text-muted">Loading the problem.</p>;
+
+  const workspace = (
+    <div className="flex h-full min-h-0 flex-col border-l border-border">
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-3">
+        <div className="font-mono text-[12px] text-text2">
+          solution.py <span className="text-muted">· Python 3.11</span>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => act('run')}
+            disabled={Boolean(busy)}
+            className="rounded border border-border-strong px-3 py-1.5 text-[13px] transition-colors hover:bg-surface2 disabled:opacity-50"
+          >
+            {busy === 'run' ? 'Running visible tests' : 'Run tests'}
+          </button>
+          <button
+            type="button"
+            onClick={() => act('submit')}
+            disabled={Boolean(busy)}
+            className="rounded bg-accent px-3 py-1.5 text-[13px] text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+          >
+            {busy === 'submit' ? 'Grading all tests' : 'Submit solution'}
+          </button>
+        </div>
+      </div>
+
+      <SplitPane
+        row={false}
+        initial={54}
+        min={25}
+        max={82}
+        first={(
+          <textarea
+            value={code}
+            spellCheck={false}
+            onChange={(event) => setCode(event.target.value)}
+            className="h-full w-full resize-none bg-code-bg p-5 font-mono text-[13px] leading-relaxed text-code-fg outline-none"
+          />
+        )}
+        second={(
+          <ResultConsole
+            outcome={outcome}
+            feedback={feedback}
+            busy={busy}
+            error={actionError}
+            onAskFeedback={askForFeedback}
+          />
+        )}
+      />
+    </div>
+  );
+
+  return (
+    <SplitPane
+      initial={40}
+      first={<div className="h-full overflow-y-auto px-7 py-6"><ProblemPanel problem={problem} /></div>}
+      second={workspace}
+    />
+  );
+}

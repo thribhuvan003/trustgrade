@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* Lifted from the design prototype. One green accent, no gradients. */
+@theme {
+  --color-bg: #f5f6f2;
+  --color-surface: #ffffff;
+  --color-surface2: #eef1ec;
+  --color-text: #171a18;
+  --color-text2: #626963;
+  --color-muted: #858c86;
+  --color-border: #dce1db;
+  --color-border-strong: #c9d0c9;
+  --color-accent: #175c4c;
+  --color-accent-hover: #10483b;
+  --color-accent-soft: #e4f0eb;
+  --color-info: #315f9e;
+  --color-warn: #9a6700;
+  --color-warn-soft: #fff4d6;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-success: #237a57;
+  --color-success-soft: #e6f4ed;
+  --color-code-bg: #171a18;
+  --color-code-fg: #e8ece8;
+  --color-code-muted: #89928a;
+  --color-code-border: #2d332f;
+
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scores, runtimes and versions line up in columns. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* One dominant heading per page. */
+.page-title {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+}

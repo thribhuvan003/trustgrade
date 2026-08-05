@@ -7,6 +7,16 @@ import review from './routes/review.js';
 export const app = express();
 
 app.use(express.json({ limit: '256kb' }));
+
+// The web app is served from a different port, so the browser needs to be told
+// this origin may call us and may send the role header.
+app.use((req, res, next) => {
+  res.set('Access-Control-Allow-Origin', process.env.WEB_ORIGIN ?? 'http://localhost:3000');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, x-demo-role');
+  res.set('Vary', 'Origin');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  return next();
+});
 app.use('/api/problems', problems);
 app.use('/api/submissions', submissions);
 app.use('/api/doubts', doubts);
