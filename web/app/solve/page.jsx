@@ -105,7 +105,7 @@ export default function SolvePage() {
             value={code}
             spellCheck={false}
             onChange={(event) => setCode(event.target.value)}
-            className="h-full w-full resize-none bg-code-bg p-5 font-mono text-[13px] leading-relaxed text-code-fg outline-none"
+            className="dark-scroll h-full w-full resize-none bg-code-bg p-5 font-mono text-[13px] leading-relaxed text-code-fg outline-none"
           />
         )}
         second={(

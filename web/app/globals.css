@@ -39,6 +39,46 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* A default scrollbar belongs to the operating system, not to this interface.
+   Thin, in the palette, and it keeps its width so nothing shifts on overflow. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-muted);
+}
+
+/* The editor is dark, so a light thumb would glare. */
+.dark-scroll {
+  scrollbar-color: var(--color-code-border) transparent;
+}
+
+.dark-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-code-border);
+}
+
+.dark-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-code-muted);
+}
+
 /* Scores, runtimes and versions line up in columns. */
 .tnum {
   font-variant-numeric: tabular-nums;

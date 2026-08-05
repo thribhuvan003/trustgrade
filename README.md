@@ -147,7 +147,7 @@ Observed, not asserted. `npm test` and `npm run attack` reproduce all of it.
   detecting the guard rather than passing vacuously.
 
 Measured latency: reads are 5–23 ms; client-side page switches 93–155 ms; a graded
-submission takes about 3 s because it runs five real containers.
+submission takes 3–5 s because it runs five real containers.
 
 ### Known limitations
 

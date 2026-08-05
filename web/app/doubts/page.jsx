@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { getDoubts, askDoubt } from '../../lib/api';
-import StatusBadge from '../../components/StatusBadge';
+import DoubtRow from '../../components/DoubtRow';
 
-const PREVIEW_LENGTH = 140;
 
 export default function DoubtsPage() {
   const [doubts, setDoubts] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [asking, setAsking] = useState(false);
   async function load() {
     try {
       setDoubts(await getDoubts());
@@ -24,11 +24,27 @@ export default function DoubtsPage() {
   if (!doubts) return <p className="p-8 text-[14px] text-muted">Loading questions.</p>;
   return (
     <div className="h-full overflow-y-auto px-8 py-6">
-      <h1 className="page-title">Doubt board</h1>
-      <p className="mt-1 text-[13px] leading-relaxed text-text2">
-        Questions are visible to everyone straight away. Their AI-drafted answers appear only after a teacher has reviewed them.
-      </p>
-      <Composer onPosted={load} />
+      <div className="flex items-start justify-between gap-8">
+        <div>
+          <h1 className="page-title">Doubt board</h1>
+          <p className="mt-1 max-w-[62ch] text-[13px] leading-relaxed text-text2">
+            Questions are visible to everyone straight away. Their AI-drafted answers appear only
+            after a teacher has reviewed them.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setAsking((open) => !open)}
+          className={`shrink-0 rounded px-3 py-2 text-[13px] transition-colors ${
+            asking
+              ? 'border border-border-strong hover:bg-surface2'
+              : 'bg-accent text-white hover:bg-accent-hover'
+          }`}
+        >
+          {asking ? 'Cancel' : 'Ask a question'}
+        </button>
+      </div>
+      {asking && <Composer onPosted={() => { setAsking(false); load(); }} />}
       <h2 className="section-title mt-8">
         Questions <span className="tnum font-mono text-[13px] font-normal text-muted">({doubts.length})</span>
       </h2>
@@ -99,57 +115,5 @@ function ComposerFields({ title, setTitle, body, setBody, codeSnippet, setCodeSn
         placeholder="Code snippet (optional)"
         className="mt-2 h-20 w-full resize-none rounded border border-border-strong bg-code-bg p-2 font-mono text-[12px] text-code-fg outline-none focus:border-accent" />
     </>
-  );
-}
-
-function DoubtRow({ doubt, expanded, onToggle }) {
-  const preview = doubt.body.length > PREVIEW_LENGTH ? `${doubt.body.slice(0, PREVIEW_LENGTH).trimEnd()}…` : doubt.body;
-  return (
-    <li className="border-b border-border">
-      <button type="button" onClick={onToggle} className="block w-full py-3 text-left hover:bg-surface2">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="text-[14px] font-medium text-text">{doubt.title}</div>
-            {!expanded && <p className="mt-0.5 truncate text-[13px] text-text2">{preview}</p>}
-          </div>
-          <StatusBadge status={doubt.status} />
-        </div>
-        <div className="tnum mt-1.5 font-mono text-[11px] text-muted">
-          {doubt.author} · {new Date(doubt.createdAt).toLocaleString()}
-        </div>
-      </button>
-      {expanded && <DoubtDetail doubt={doubt} />}
-    </li>
-  );
-}
-
-function DoubtDetail({ doubt }) {
-  return (
-    <div className="pb-4">
-      <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-text2">{doubt.body}</p>
-      {doubt.codeSnippet && (
-        <pre className="mt-2 overflow-x-auto rounded bg-code-bg p-3 font-mono text-[12px] text-code-fg">{doubt.codeSnippet}</pre>
-      )}
-      {doubt.status === 'PENDING_REVIEW' && (
-        <p className="mt-3 rounded border border-border bg-warn-soft p-3 text-[13px] leading-relaxed text-warn">
-          Your question is awaiting teacher review. The generated draft remains private until approved.
-        </p>
-      )}
-      {doubt.status === 'REJECTED' && (
-        <p className="mt-3 rounded border border-border bg-danger-soft p-3 text-[13px] leading-relaxed text-danger">
-          A teacher read the generated draft and chose not to publish it, so this question has no
-          answer. Ask it again as a new question if you still need help.
-        </p>
-      )}
-      {doubt.status === 'APPROVED' && doubt.answer && (
-        <div className="mt-3 rounded border border-border bg-success-soft p-3">
-          <div className="text-[12px] text-success">AI-assisted draft, reviewed and approved by a teacher</div>
-          <div className="tnum mt-0.5 font-mono text-[11px] text-muted">
-            {doubt.answer.reviewer} · {new Date(doubt.answer.approvedAt).toLocaleString()}
-          </div>
-          <p className="mt-2 whitespace-pre-wrap text-[13px] leading-relaxed text-text">{doubt.answer.text}</p>
-        </div>
-      )}
-    </div>
   );
 }
