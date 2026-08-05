@@ -1,6 +1,10 @@
 node_modules/
 .env
 .env.*
+# except the two that are meant to ship: a template, and the public
+# addresses the deployed frontend is built with
+!.env.example
+!web/.env.production
 .next/
 pgdata/
 *.log
