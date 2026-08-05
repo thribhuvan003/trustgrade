@@ -171,6 +171,14 @@ submission takes about 3 s because it runs five real containers.
 - No claim of complete prompt-injection prevention.
 - `QUEUED` and `RUNNING` exist in `SubmissionStatus` because the data model names them, but
   grading is synchronous so the code never produces them.
+- **A rejected question cannot be re-drafted.** The schema deliberately allows several
+  answers per doubt so that a rejected question can be answered again, but no route builds
+  that second draft, so today a student has to ask a new question. The badge says "Not
+  published" rather than "Rejected for revision" because the interface should not promise a
+  path that does not exist.
+- **A teacher cannot review past decisions.** Every approval and rejection, with its note,
+  is stored in `AnswerTransition` and shown while the answer is in the queue, but once
+  decided it leaves the queue and there is no history screen to find it again.
 
 ## Tooling
 
