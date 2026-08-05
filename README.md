@@ -186,6 +186,9 @@ reads is single-digit-to-low-double-digit milliseconds.
   password anywhere in this project.
 - No public deployment. Exposing an arbitrary-code execution service needs production
   controls beyond this scope.
+- The deployed instance runs everything except code execution. No managed host gives a
+  container a Docker daemon, so a submission there returns "The grading sandbox is
+  unavailable" rather than a score. Grading works locally, and the demo video shows it.
 - **`docker compose up` starts Postgres and builds the sandbox image; it does not start the
   API or the web app.** Those run with `npm run dev`, as the setup steps above show. The API
   spawns sandbox containers directly on the host daemon, which keeps the runner independent

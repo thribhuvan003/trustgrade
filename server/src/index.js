@@ -17,6 +17,13 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   return next();
 });
+// Anyone opening the API host directly should not meet a bare "Cannot GET /".
+app.get('/', (_req, res) => res.json({
+  service: 'TrustGrade API',
+  routes: ['/api/problems/:id', '/api/submissions', '/api/doubts', '/api/review/queue'],
+  note: 'Code grading needs a Docker daemon, so it is unavailable on managed hosting.',
+}));
+
 app.use('/api/problems', problems);
 app.use('/api/submissions', submissions);
 app.use('/api/doubts', doubts);
