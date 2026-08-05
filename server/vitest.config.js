@@ -1,9 +1,9 @@
 import { defineConfig } from 'vitest/config';
 
-// Load DATABASE_URL from the repo root .env when running on a developer machine.
+// Load DATABASE_URL from server/.env when running on a developer machine.
 // Inside Docker Compose the variable is already set, so a missing file is fine.
 try {
-  process.loadEnvFile('../.env');
+  process.loadEnvFile('.env');
 } catch {
   // already provided by the environment
 }

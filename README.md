@@ -5,15 +5,20 @@ An AI-assisted code grading and doubt-resolution portal, built around one rule:
 > Deterministic tests decide correctness. AI produces advisory text, not authority.
 > No AI-generated answer reaches a student without teacher approval.
 
-That rule is enforced by a Postgres trigger, not by application code.
+The service layer enforces that rule, and so does the database, so it holds even when the
+application is bypassed entirely.
 
 ## Review in five minutes
 
 ```bash
-cp .env.example .env      # an LLM key is optional; see "With the model offline"
+cp .env.example server/.env   # an LLM key is optional; see "With the model offline"
 docker compose up -d      # Postgres, and builds the sandbox image
+
+# terminal 1
 cd server && npm install && npx prisma migrate deploy && npm run seed && npm run dev
-cd web    && npm install && npm run dev
+
+# terminal 2
+cd web && npm install && npm run dev
 ```
 
 Then open <http://localhost:3000>. The sidebar switches between student and teacher.
@@ -89,11 +94,11 @@ unique index is what keeps at most one of them published.
 | 64 KB output cap | flooding the server | 10 MB print truncated at exactly 65536 bytes |
 | 16 KB source limit | argument-length crash | refused before any container starts |
 
-The program reaches the container base64-encoded in an environment variable rather than as
-a mounted file. Two simpler designs were tried and rejected on evidence: a bind mount is
-resolved by the host daemon, so a file written by the server container is invisible to the
-runner; and `docker cp` fails outright against `--read-only` with *"container rootfs is
-marked read-only"*.
+The program reaches the container base64-encoded in an environment variable rather than as a
+mounted file. `docker cp` was tried first and fails outright against `--read-only` with
+*"container rootfs is marked read-only"* — observed, not assumed. A bind mount does work
+while the API runs on the host, but it ties the runner to wherever the API happens to live
+and would break the moment the API is containerised.
 
 This reduces the listed risks. It is **not** a claim that the container is secure.
 
