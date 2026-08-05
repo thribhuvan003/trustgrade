@@ -44,7 +44,9 @@ export default function DoubtPanel({ answer }) {
         {answer.aiDraft}
       </pre>
       <div className="mt-2 font-mono text-[11px] text-muted">
-        model {answer.model} · prompt {answer.promptVersion} · confidence {answer.confidence}
+        {answer.model === 'none'
+          ? 'no draft was generated'
+          : `model ${answer.model} · prompt ${answer.promptVersion} · confidence ${answer.confidence}`}
       </div>
     </>
   );

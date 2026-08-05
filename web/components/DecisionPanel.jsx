@@ -45,7 +45,7 @@ export default function DecisionPanel({
           type="button"
           disabled={busy || !published.trim()}
           onClick={() => onDecide('approve')}
-          className="rounded bg-accent px-3 py-2 text-[13px] text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+          className="rounded bg-accent px-3 py-1.5 text-[13px] text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
         >
           Approve and publish
         </button>
@@ -53,7 +53,7 @@ export default function DecisionPanel({
           type="button"
           disabled={busy || !note.trim()}
           onClick={() => onDecide('reject')}
-          className="rounded border border-border-strong px-3 py-2 text-[13px] transition-colors hover:bg-surface2 disabled:opacity-50"
+          className="rounded border border-border-strong px-3 py-1.5 text-[13px] transition-colors hover:bg-surface2 disabled:opacity-50"
         >
           Reject
         </button>

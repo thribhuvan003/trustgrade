@@ -10,7 +10,7 @@ run `npm run attack` to watch the defences fire.
 |---|---|---|
 | Student program | No | A disposable container with no network, capped memory, CPU and process count, and a read-only root filesystem |
 | Doubt text and code snippet | No | Delimited as untrusted input in the prompt, then held for human approval |
-| Model output | No | Schema validated, never executed, never visible to a student until a teacher publishes it |
+| Model output | No | Schema validated and never executed. On the doubt board it reaches no student until a teacher publishes it. Code feedback is the exception: it is advisory, unstored, and returned only to the author of the code it describes |
 | Teacher action | Yes, by assumption | Nothing. Role comes from a demo header, not authentication |
 
 ## What the database enforces
@@ -74,9 +74,12 @@ without a teacher, over a connection the model does not have. A student calling 
 reject, or queue endpoints receives 403 in all three cases, verified.
 
 Also verified: `__proto__` and `constructor.prototype` sent as raw JSON leave
-`Object.prototype` untouched, and a body larger than the prompt fence is rejected at
-validation rather than truncated, so the closing delimiter cannot be pushed out of the
-prompt.
+`Object.prototype` untouched.
+
+Oversized input is truncated at the fence, not rejected, so the closing delimiter can
+never be pushed out of the prompt. A student writing that delimiter themselves is a
+different problem, and the closing tag is escaped in the untrusted block for exactly
+that reason. Neither defence is the one that matters: containment is.
 
 ## Sandbox controls
 

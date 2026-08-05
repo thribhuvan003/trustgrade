@@ -26,7 +26,7 @@ const inFlight = new Set();
 function sweep() {
   for (const name of inFlight) {
     try {
-      execSync(`docker rm -f ${name}`, { stdio: 'ignore' });
+      execSync(`docker rm -f ${name}`, { stdio: 'ignore', timeout: 5000 });
     } catch { /* already gone */ }
   }
   inFlight.clear();
@@ -38,12 +38,29 @@ process.once('SIGINT', () => { sweep(); process.exit(130); });
 process.once('SIGTERM', () => { sweep(); process.exit(143); });
 
 // So the real guarantee lives at startup: remove what a previous process left.
+// Age separates "stranded" from "another process is using it" — a run cannot
+// outlive the wall clock — and the README has you run the tests while the dev
+// server is up, where deleting its container would fake a timeout.
+const ORPHAN_AGE_MS = 30_000;
+
+// An absent daemon fails fast, but an unresponsive one does not: the CLI waits.
+// This runs at import, so without a bound a sick daemon stops the API booting
+// at all, taking the doubt board and the review queue down with the grader.
+const PROBE = { stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000 };
+
 function removeOrphans() {
   try {
-    const ids = execSync('docker ps -aq --filter name=tg-run-', {
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).toString().trim();
-    if (ids) execSync(`docker rm -f ${ids.split('\n').join(' ')}`, { stdio: 'ignore' });
+    const found = execSync('docker ps -aq --filter name=tg-run-', PROBE).toString().trim();
+    if (!found) return;
+
+    const ids = found.split('\n');
+    const stale = execSync(`docker inspect --format "{{.Id}} {{.Created}}" ${ids.join(' ')}`, PROBE)
+      .toString().trim().split('\n')
+      .map((line) => line.split(' '))
+      .filter(([, iso]) => Date.now() - Date.parse(iso) > ORPHAN_AGE_MS)
+      .map(([id]) => id);
+
+    if (stale.length) execSync(`docker rm -f ${stale.join(' ')}`, { stdio: 'ignore', timeout: 5000 });
   } catch { /* docker unavailable, nothing to clean */ }
 }
 
@@ -78,11 +95,20 @@ function docker(args, input) {
       return;
     }
 
+    // Decoding per chunk would split a multi-byte character across a pipe
+    // boundary and turn it into U+FFFD, which would make a correct program's
+    // output depend on how the kernel happened to flush it.
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
     child.stdout.on('data', (chunk) => { stdout += take(chunk); });
     child.stderr.on('data', (chunk) => { stderr += take(chunk); });
     child.on('error', failed);
     child.on('close', (code) => resolve({ stdout, stderr, exitCode: code, truncated }));
 
+    // The CLI can exit before it reads stdin. Without a listener that write
+    // raises EPIPE on a stream nobody is watching, which Node turns into an
+    // uncaught exception and takes the whole API down with the grader.
+    child.stdin.on('error', () => {});
     if (input !== undefined) child.stdin.end(input);
   });
 }
@@ -94,6 +120,13 @@ async function remove(name) {
 async function wasOomKilled(name) {
   const { stdout } = await docker(['inspect', '--format', '{{.State.OOMKilled}}', name]);
   return stdout.trim() === 'true';
+}
+
+// Whether the run got as far as producing a container. If it did not, the
+// nonzero exit came from docker rather than from the student's program.
+async function containerExists(name) {
+  const { stdout, exitCode } = await docker(['inspect', '--format', '{{.Id}}', name]);
+  return exitCode === 0 && stdout.trim() !== '';
 }
 
 function verdictFor(exitCode, timedOut, oomKilled) {
@@ -112,7 +145,7 @@ const tooLarge = () => ({
 export async function runInSandbox(code, stdin = '') {
   if (Buffer.byteLength(code, 'utf8') > MAX_CODE_BYTES) return tooLarge();
 
-  const name = `tg-run-${randomUUID().slice(0, 12)}`;
+  const name = `tg-run-${process.pid}-${randomUUID().slice(0, 12)}`;
   const encoded = Buffer.from(code, 'utf8').toString('base64');
   const startedAt = Date.now();
   let timedOut = false;
@@ -128,6 +161,21 @@ export async function runInSandbox(code, stdin = '') {
     // removes the container itself. That is what ends the attached run.
     timer = setTimeout(() => { timedOut = true; remove(name); }, TIME_LIMIT_MS);
     const result = await run;
+
+    // docker exits nonzero when the program fails and when the run never
+    // started: daemon down, image missing, socket refused. Only the first is
+    // the student's, and scoring the second writes a zero into someone's
+    // record for an outage. No container means nothing of theirs ran.
+    if (result.exitCode !== 0 && !timedOut && !(await containerExists(name))) {
+      return {
+        ...result,
+        stderr: `[sandbox] docker failed: ${result.stderr.trim().slice(0, 200)}`,
+        exitCode: -1,
+        timedOut: false,
+        runtimeMs: Date.now() - startedAt,
+        verdict: 'RUNTIME_ERROR',
+      };
+    }
 
     // A timeout hides a memory kill: the timer already removed the container,
     // so nothing is left to inspect. Reporting the limit seen to fire is honest.

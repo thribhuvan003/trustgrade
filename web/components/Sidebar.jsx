@@ -43,6 +43,7 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
+              aria-current={pathname === href ? 'page' : undefined}
               className={`block rounded px-3 py-2 text-[14px] ${
                 pathname === href
                   ? 'bg-accent-soft font-medium text-accent'

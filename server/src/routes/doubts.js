@@ -18,7 +18,11 @@ const posted = z.object({
 // code snippet was too long sends them looking in the wrong place.
 function explain(issue) {
   if (issue.code === 'unrecognized_keys') return 'That doubt carries fields we do not accept. Nothing was saved.';
-  if (issue.path[0] === 'title') return 'A doubt needs a title. Nothing was saved.';
+  if (issue.path[0] === 'title') {
+    return issue.code === 'too_big'
+      ? 'That title is longer than 200 characters. Nothing was saved.'
+      : 'A doubt needs a title. Nothing was saved.';
+  }
   if (issue.path[0] === 'codeSnippet') return 'That code snippet is longer than the 8 KB limit. Nothing was saved.';
   if (issue.code === 'too_big') return 'That question is longer than the 8 KB limit. Nothing was saved.';
   return 'A doubt needs a question. Nothing was saved.';
@@ -29,8 +33,13 @@ function explain(issue) {
 function present(doubt) {
   const approved = doubt.answers.find((answer) => answer.status === 'APPROVED');
   if (!approved) {
-    const waiting = doubt.answers.some((answer) => answer.status === 'PENDING_REVIEW');
-    return { ...strip(doubt), status: waiting ? 'PENDING_REVIEW' : 'REJECTED', answer: null };
+    // Only call it rejected when a teacher actually rejected it. A doubt with no
+    // answer, or one still in DRAFT because drafting failed, is waiting — saying
+    // otherwise invents a human decision, in the one product whose whole claim is
+    // that human decisions are real.
+    const rejected = doubt.answers.length > 0
+      && doubt.answers.every((answer) => answer.status === 'REJECTED');
+    return { ...strip(doubt), status: rejected ? 'REJECTED' : 'PENDING_REVIEW', answer: null };
   }
 
   const approval = approved.transitions.at(-1);

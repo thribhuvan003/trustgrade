@@ -3,9 +3,9 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
 // Running code needs a Docker daemon, which managed hosting does not give a
-// container, so grading alone is pointed at a machine that has one. Everything
-// else stays on the always-on API, which means the site keeps working even when
-// the grading host is unreachable. Both talk to the same database.
+// container, so the deployed API runs on a machine that has one. This stays a
+// separate name because grading is the one route with that requirement: point
+// it elsewhere and the rest of the site is unaffected.
 const SANDBOX = process.env.NEXT_PUBLIC_SANDBOX_API_URL ?? BASE;
 
 export function currentRole() {

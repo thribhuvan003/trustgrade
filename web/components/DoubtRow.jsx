@@ -8,7 +8,8 @@ export default function DoubtRow({ doubt, expanded, onToggle }) {
   const preview = doubt.body.length > PREVIEW_LENGTH ? `${doubt.body.slice(0, PREVIEW_LENGTH).trimEnd()}…` : doubt.body;
   return (
     <li className="border-b border-border">
-      <button type="button" onClick={onToggle} className="block w-full py-3 text-left hover:bg-surface2">
+      <button type="button" onClick={onToggle} aria-expanded={expanded}
+        className="block w-full py-3 text-left hover:bg-surface2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="text-[14px] font-medium text-text">{doubt.title}</div>

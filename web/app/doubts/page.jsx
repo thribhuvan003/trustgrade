@@ -22,7 +22,7 @@ export default function DoubtsPage() {
   if (loadError && !doubts) return <p className="p-8 text-[14px] text-danger">{loadError}</p>;
   if (!doubts) return <p className="p-8 text-[14px] text-muted">Loading questions.</p>;
   return (
-    <div className="h-full overflow-y-auto px-8 py-6">
+    <div className="h-full overflow-y-auto px-7 py-6">
       <div className="flex items-start justify-between gap-8">
         <div>
           <h1 className="page-title">Doubt board</h1>
@@ -34,7 +34,7 @@ export default function DoubtsPage() {
         <button
           type="button"
           onClick={() => setAsking((open) => !open)}
-          className={`shrink-0 rounded px-3 py-2 text-[13px] transition-colors ${
+          className={`shrink-0 rounded px-3 py-1.5 text-[13px] transition-colors ${
             asking
               ? 'border border-border-strong hover:bg-surface2'
               : 'bg-accent text-white hover:bg-accent-hover'
@@ -44,6 +44,10 @@ export default function DoubtsPage() {
         </button>
       </div>
       {asking && <Composer onPosted={() => { setAsking(false); load(); }} />}
+      {/* The board is already on screen by now, so a failed refresh would
+          otherwise leave a stale list with the new question missing and nothing
+          said about it. */}
+      {loadError && <p className="mt-3 text-[13px] text-danger">{loadError}</p>}
       <h2 className="section-title mt-8">
         Questions <span className="tnum font-mono text-[13px] font-normal text-muted">({doubts.length})</span>
       </h2>
@@ -105,13 +109,14 @@ function ComposerFields({ title, setTitle, body, setBody, codeSnippet, setCodeSn
         Do not include passwords, personal data or confidential information.
       </p>
       <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title"
+        aria-label="Title" maxLength={200}
         className="mt-3 w-full rounded border border-border-strong bg-surface p-2 text-[13px] outline-none focus:border-accent" />
       <textarea value={body} onChange={(event) => setBody(event.target.value)}
-        placeholder="Describe what you tried and where it breaks."
+        placeholder="Describe what you tried and where it breaks." aria-label="Question"
         className="mt-2 h-24 w-full resize-none rounded border border-border-strong bg-surface p-2 text-[13px] leading-relaxed outline-none focus:border-accent" />
       <div className="tnum text-right font-mono text-[11px] text-muted">{body.length} characters</div>
       <textarea value={codeSnippet} onChange={(event) => setCodeSnippet(event.target.value)}
-        placeholder="Code snippet (optional)"
+        placeholder="Code snippet (optional)" aria-label="Code snippet"
         className="mt-2 h-20 w-full resize-none rounded border border-border-strong bg-code-bg p-2 font-mono text-[12px] text-code-fg outline-none focus:border-accent" />
     </>
   );

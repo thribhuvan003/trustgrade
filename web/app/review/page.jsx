@@ -90,7 +90,11 @@ export default function ReviewPage() {
         <button
           key={answer.id}
           type="button"
-          onClick={() => setSelectedId(answer.id)}
+          // Clearing the confirmation here and not in the reset effect keeps it on
+          // screen through the jump that approving causes, while stopping it from
+          // following the teacher onto an answer they have not decided yet.
+          onClick={() => { setSelectedId(answer.id); setDone(null); }}
+          aria-current={answer.id === selectedId}
           className={`block w-full border-b border-border px-5 py-3 text-left transition-colors ${
             answer.id === selectedId ? 'bg-accent-soft' : 'hover:bg-surface2'
           }`}

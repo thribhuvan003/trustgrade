@@ -26,16 +26,28 @@ export default function TestResults({ outcome, busy, error }) {
 
   return (
     <div>
+      {/* A run covers the two visible cases, so its score is not the score. Showing
+          "100 / 100" for it invites exactly the wrong conclusion, which is the one
+          thing this project is meant not to do. Only a graded submission gets a number. */}
       <div className="flex items-baseline gap-6 border-b border-border pb-4">
-        <div>
-          <div className="tnum font-mono text-[26px] leading-none">{score} / 100</div>
-          <div className="mt-1 text-[12px] text-muted">
-            {kind === 'run' ? 'Visible tests only, not saved' : 'Recorded'}
+        {kind === 'run' ? (
+          <div>
+            <div className="tnum font-mono text-[26px] leading-none">
+              {passed} / {total}
+            </div>
+            <div className="mt-1 text-[12px] text-muted">Visible tests only, not scored or saved</div>
           </div>
-        </div>
-        <div className="text-[14px] text-text2">
-          {passed} of {total} tests passed.
-        </div>
+        ) : (
+          <>
+            <div>
+              <div className="tnum font-mono text-[26px] leading-none">{score} / 100</div>
+              <div className="mt-1 text-[12px] text-muted">Recorded</div>
+            </div>
+            <div className="text-[14px] text-text2">
+              {passed} of {total} tests passed.
+            </div>
+          </>
+        )}
       </div>
 
       <ul className="mt-3">

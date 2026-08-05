@@ -22,11 +22,11 @@ export default function SubmissionsPage() {
   }
 
   return (
-    <div className="px-7 py-6">
+    <div className="h-full overflow-y-auto px-7 py-6">
       <h1 className="page-title">Submissions</h1>
 
       {submissions.length === 0 ? (
-        <p className="mt-4 text-[14px] text-text2">You have not submitted a solution yet.</p>
+        <p className="mt-4 text-[13px] text-muted">You have not submitted a solution yet.</p>
       ) : (
         <div className="mt-5 border-t border-border">
           <TableHeader />

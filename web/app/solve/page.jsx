@@ -45,7 +45,10 @@ export default function SolvePage() {
     try {
       const call = kind === 'run' ? runVisibleTests : submitSolution;
       setOutcome({ ...(await call(PROBLEM_ID, code)), kind });
-      if (kind === 'submit') setFeedback(null);
+      // Feedback is written against a graded submission. A run produces no
+      // submission, so keeping the old review next to it leaves the panel
+      // advising on code the student may no longer be looking at.
+      setFeedback(null);
     } catch (error) {
       // Leaving the previous run on screen makes a refused attempt look scored:
       // submit an empty editor and the last score sits there under the error.
@@ -94,7 +97,7 @@ export default function SolvePage() {
           <button
             type="button"
             onClick={() => act('run')}
-            disabled={Boolean(busy)}
+            disabled={Boolean(busy) || !canRun}
             className="rounded border border-border-strong px-3 py-1.5 text-[13px] transition-colors hover:bg-surface2 disabled:opacity-50"
           >
             {busy === 'run' ? 'Running visible tests' : 'Run tests'}
@@ -102,7 +105,7 @@ export default function SolvePage() {
           <button
             type="button"
             onClick={() => act('submit')}
-            disabled={Boolean(busy)}
+            disabled={Boolean(busy) || !canRun}
             className="rounded bg-accent px-3 py-1.5 text-[13px] text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
           >
             {busy === 'submit' ? 'Grading all tests' : 'Submit solution'}

@@ -2,10 +2,7 @@
 export default function ProblemPanel({ problem }) {
   return (
     <>
-      <div className="font-mono text-[11px] uppercase tracking-wide text-muted">
-        Problem 1 · Medium
-      </div>
-      <h1 className="page-title mt-1">{problem.title}</h1>
+      <h1 className="page-title">{problem.title}</h1>
       <p className="mt-4 text-[14px] leading-relaxed text-text2">{problem.description}</p>
 
       <Block heading="Input">{problem.inputFormat}</Block>
