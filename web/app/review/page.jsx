@@ -29,12 +29,28 @@ export default function ReviewPage() {
 
   const selected = queue?.find((answer) => answer.id === selectedId) ?? null;
 
+  // Reset the editor when the teacher moves to a different answer. The
+  // confirmation is deliberately not cleared here: approving pulls the next
+  // answer into view, and wiping the message on that jump made a successful
+  // approval look like nothing had happened.
   useEffect(() => {
-    setPublished(selected?.aiDraft ?? '');
+    // Only a real model draft is worth starting from. When the model produced
+    // nothing, aiDraft holds our own fallback sentence, and pre-loading that as
+    // editable text means one unthinking click publishes it to a student.
+    const drafted = selected && selected.model !== 'none';
+    setPublished(drafted ? selected.aiDraft : '');
     setNote('');
     setError(null);
-    setDone(null);
   }, [selectedId]);
+
+  // Approving is irreversible, so losing a half-written answer to a stray
+  // refresh should at least require confirming.
+  useEffect(() => {
+    const unsaved = () => published.trim() && published !== selected?.aiDraft;
+    const warn = (event) => { if (unsaved()) event.preventDefault(); };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [published, selected]);
 
   async function decide(kind) {
     setBusy(true);
@@ -49,6 +65,9 @@ export default function ReviewPage() {
       await load();
     } catch (failure) {
       setError(failure.message);
+      // A conflict means the queue is out of date, so reload it rather than
+      // leaving a row that can only ever fail again.
+      await load();
     } finally {
       setBusy(false);
     }
@@ -80,7 +99,10 @@ export default function ReviewPage() {
           <div className="truncate text-[13px] font-medium">{answer.doubt.title}</div>
           <div className="mt-0.5 truncate text-[12px] text-text2">{answer.doubt.author}</div>
           <div className="tnum mt-1 font-mono text-[11px] text-muted">
-            {answer.riskFlags.length} flags · confidence {answer.confidence} · v{answer.version}
+            <span className={answer.riskFlags.length ? 'font-medium text-warn' : undefined}>
+              {answer.riskFlags.length} flags
+            </span>
+            {` · confidence ${answer.confidence} · v${answer.version}`}
           </div>
         </button>
       ))}

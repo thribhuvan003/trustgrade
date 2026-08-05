@@ -12,14 +12,21 @@ export function setRole(role) {
 }
 
 async function call(path, options = {}) {
-  const response = await fetch(BASE + path, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-demo-role': currentRole(),
-      ...options.headers,
-    },
-  });
+  let response;
+  try {
+    response = await fetch(BASE + path, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-demo-role': currentRole(),
+        ...options.headers,
+      },
+    });
+  } catch {
+    // fetch rejects with "Failed to fetch" when the API is down or blocked,
+    // which tells a student nothing about what to do next.
+    throw new Error('The server is not responding. Nothing was saved. Check it is running, then try again.');
+  }
 
   const body = await response.json().catch(() => null);
   // The server always sends { error } with a real status, so the message it

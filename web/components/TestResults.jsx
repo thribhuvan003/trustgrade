@@ -1,4 +1,5 @@
-import StatusBadge from './StatusBadge';
+import StatusBadge, { outcomeOf } from './StatusBadge';
+
 
 export default function TestResults({ outcome, busy }) {
   if (busy === 'run' || busy === 'submit') {
@@ -41,7 +42,7 @@ export default function TestResults({ outcome, busy }) {
               <span className="tnum w-14 font-mono text-[12px] text-muted">
                 Test {index + 1}
               </span>
-              <StatusBadge status={result.passed ? 'OK' : result.verdict} />
+              <StatusBadge status={outcomeOf(result)} />
               <span className="tnum ml-auto font-mono text-[12px] text-muted">
                 {result.runtimeMs} ms
               </span>

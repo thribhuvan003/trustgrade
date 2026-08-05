@@ -26,7 +26,7 @@ export default function DoubtsPage() {
     <div className="h-full overflow-y-auto px-8 py-6">
       <h1 className="page-title">Doubt board</h1>
       <p className="mt-1 text-[13px] leading-relaxed text-text2">
-        Questions are shared after their AI-drafted answers have been reviewed by a teacher.
+        Questions are visible to everyone straight away. Their AI-drafted answers appear only after a teacher has reviewed them.
       </p>
       <Composer onPosted={load} />
       <h2 className="section-title mt-8">
@@ -133,6 +133,12 @@ function DoubtDetail({ doubt }) {
       {doubt.status === 'PENDING_REVIEW' && (
         <p className="mt-3 rounded border border-border bg-warn-soft p-3 text-[13px] leading-relaxed text-warn">
           Your question is awaiting teacher review. The generated draft remains private until approved.
+        </p>
+      )}
+      {doubt.status === 'REJECTED' && (
+        <p className="mt-3 rounded border border-border bg-danger-soft p-3 text-[13px] leading-relaxed text-danger">
+          A teacher read the generated draft and chose not to publish it, so this question has no
+          answer. Ask it again as a new question if you still need help.
         </p>
       )}
       {doubt.status === 'APPROVED' && doubt.answer && (

@@ -54,11 +54,14 @@ export default function SplitPane({ first, second, initial = 40, min = 22, max =
         role="separator"
         aria-orientation={row ? 'vertical' : 'horizontal'}
         aria-valuenow={Math.round(size)}
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-label={row ? 'Resize panes horizontally' : 'Resize panes vertically'}
         tabIndex={0}
         onPointerDown={startDrag}
         onKeyDown={nudge}
         title="Drag to resize"
-        className={`group relative shrink-0 focus:outline-none ${
+        className={`group relative shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
           row ? 'w-[9px] cursor-col-resize' : 'h-[9px] cursor-row-resize'
         }`}
       >

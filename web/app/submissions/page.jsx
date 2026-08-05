@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getSubmissions } from '../../lib/api';
-import StatusBadge from '../../components/StatusBadge';
+import StatusBadge, { outcomeOf, submissionOutcome } from '../../components/StatusBadge';
 
 export default function SubmissionsPage() {
   const [submissions, setSubmissions] = useState(null);
@@ -56,12 +56,6 @@ function TableHeader() {
   );
 }
 
-function overallVerdict(submission) {
-  if (submission.status === 'FAILED') return 'FAILED';
-  if (submission.passed === submission.total) return 'OK';
-  return submission.results.find((result) => !result.passed)?.verdict ?? 'OK';
-}
-
 function formatTime(iso) {
   return new Date(iso).toLocaleString(undefined, {
     month: 'short',
@@ -88,7 +82,7 @@ function SubmissionRow({ submission, open, onToggle }) {
         <span className="tnum w-16 text-right font-mono text-[12px]">
           {scored ? `${submission.passed}/${submission.total}` : '—'}
         </span>
-        <span className="w-40"><StatusBadge status={overallVerdict(submission)} /></span>
+        <span className="w-40"><StatusBadge status={submissionOutcome(submission)} /></span>
         <span className="tnum w-20 text-right font-mono text-[12px] text-text2">
           {scored ? `${submission.runtimeMs} ms` : '—'}
         </span>
@@ -116,7 +110,7 @@ function SubmissionDetail({ submission }) {
             <li key={result.id} className="border-b border-border py-2 last:border-0">
               <div className="flex items-center gap-3">
                 <span className="tnum w-14 font-mono text-[12px] text-muted">Test {index + 1}</span>
-                <StatusBadge status={result.passed ? 'OK' : result.verdict} />
+                <StatusBadge status={outcomeOf(result)} />
                 <span className="tnum ml-auto font-mono text-[12px] text-muted">{result.runtimeMs} ms</span>
               </div>
               {result.hidden ? (

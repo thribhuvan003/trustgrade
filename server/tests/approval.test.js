@@ -58,7 +58,7 @@ describe('answer approval', () => {
     const approved = await approvedAnswer();
     await expect(transition({
       answerId: approved.id, to: 'PENDING_REVIEW', actorId: teacherId, expectedVersion: approved.version,
-    })).rejects.toThrow(/cannot move from APPROVED to PENDING_REVIEW/);
+    })).rejects.toThrow(/already approved and cannot be changed/);
   });
 
   it('blocks the same jump when raw SQL bypasses this service', async () => {

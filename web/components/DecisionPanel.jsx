@@ -10,16 +10,24 @@ export default function DecisionPanel({
 }) {
   return (
     <div className="h-full overflow-y-auto border-l border-border px-6 py-5">
-      <h2 className="section-title">Final answer</h2>
+      <h2 className="section-title" id="final-answer-label">Final answer</h2>
+      <p className="mt-0.5 text-[12px] text-muted">
+        {answer.model === 'none'
+          ? 'No draft was generated, so this starts empty. Write the answer yourself.'
+          : 'Starts from the draft. Edit it before publishing.'}
+      </p>
       <textarea
         value={published}
+        aria-labelledby="final-answer-label"
         onChange={(event) => onPublishedChange(event.target.value)}
+        placeholder="What the student will read."
         className="mt-2 h-56 w-full resize-none rounded border border-border-strong bg-surface p-3 text-[13px] leading-relaxed outline-none transition-colors focus:border-accent"
       />
 
-      <h2 className="section-title mt-5">Review note</h2>
+      <h2 className="section-title mt-5" id="review-note-label">Review note</h2>
       <textarea
         value={note}
+        aria-labelledby="review-note-label"
         onChange={(event) => onNoteChange(event.target.value)}
         placeholder="Required when rejecting."
         className="mt-2 h-20 w-full resize-none rounded border border-border-strong bg-surface p-3 text-[13px] outline-none transition-colors focus:border-accent"

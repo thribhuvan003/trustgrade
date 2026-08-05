@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getProblem, runVisibleTests, submitSolution, getFeedback } from '../../lib/api';
 import ProblemPanel from '../../components/ProblemPanel';
 import ResultConsole from '../../components/ResultConsole';
@@ -26,12 +26,18 @@ export default function SolvePage() {
   const [outcome, setOutcome] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [actionError, setActionError] = useState(null);
+  // Disabling the button is state, so React has not re-rendered yet when a
+  // second click lands. Without this, three quick clicks graded three times and
+  // wrote three rows into the student's history.
+  const running = useRef(false);
 
   useEffect(() => {
     getProblem(PROBLEM_ID).then(setProblem).catch((error) => setLoadError(error.message));
   }, []);
 
   async function act(kind) {
+    if (running.current) return;
+    running.current = true;
     setBusy(kind);
     setActionError(null);
     try {
@@ -42,10 +48,13 @@ export default function SolvePage() {
       setActionError(error.message);
     } finally {
       setBusy(null);
+      running.current = false;
     }
   }
 
   async function askForFeedback() {
+    if (running.current) return;
+    running.current = true;
     setBusy('feedback');
     try {
       setFeedback(await getFeedback(outcome.id));
@@ -53,6 +62,7 @@ export default function SolvePage() {
       setActionError(error.message);
     } finally {
       setBusy(null);
+      running.current = false;
     }
   }
 

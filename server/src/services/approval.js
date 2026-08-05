@@ -41,6 +41,12 @@ export async function transition({
   return prisma.$transaction(async (tx) => {
     const answer = await tx.answer.findUnique({ where: { id: answerId } });
     if (!answer) throw httpError(404, 'That answer no longer exists.');
+    // Usually this means someone decided it first. Saying so beats "cannot move
+    // from APPROVED to APPROVED", and unlike blaming another reviewer it stays
+    // true when a teacher is reopening their own decision.
+    if (ALLOWED[answer.status].length === 0) {
+      throw httpError(409, `That answer was already ${answer.status.toLowerCase()} and cannot be changed. Reload to see the current version.`);
+    }
     if (!ALLOWED[answer.status].includes(to)) {
       throw httpError(409, `An answer cannot move from ${answer.status} to ${to}.`);
     }
