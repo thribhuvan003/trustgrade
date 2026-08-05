@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getProblem, runVisibleTests, submitSolution, getFeedback } from '../../lib/api';
+import { getProblem, runVisibleTests, submitSolution, getFeedback, sandboxReachable } from '../../lib/api';
 import ProblemPanel from '../../components/ProblemPanel';
 import ResultConsole from '../../components/ResultConsole';
 import SplitPane from '../../components/SplitPane';
 
 const PROBLEM_ID = 'longest-stable-segment';
-// False only on the hosted build, where there is no Docker daemon to run code in.
-const SANDBOX_AVAILABLE = process.env.NEXT_PUBLIC_SANDBOX_AVAILABLE !== 'false';
 
 const STARTER = `import sys
 
@@ -32,9 +30,11 @@ export default function SolvePage() {
   // second click lands. Without this, three quick clicks graded three times and
   // wrote three rows into the student's history.
   const running = useRef(false);
+  const [canRun, setCanRun] = useState(true);
 
   useEffect(() => {
     getProblem(PROBLEM_ID).then(setProblem).catch((error) => setLoadError(error.message));
+    sandboxReachable().then(setCanRun);
   }, []);
 
   async function act(kind) {
@@ -73,12 +73,12 @@ export default function SolvePage() {
 
   const workspace = (
     <div className="flex h-full min-h-0 flex-col border-l border-border">
-      {!SANDBOX_AVAILABLE && (
+      {!canRun && (
         <p className="shrink-0 border-b border-border bg-warn-soft px-6 py-2.5 text-[12px] leading-relaxed text-warn">
-          This hosted copy has no Docker daemon, so code is not executed here and Run and Submit
-          will not score. Everything else works: the doubt board, the AI drafts and the teacher
-          review. Clone the repository and run <span className="font-mono">docker compose up</span> to
-          grade for real.
+          The machine that runs code is not reachable right now, so Run and Submit will not
+          score. Everything else works: the doubt board, the AI drafts and the teacher review.
+          Clone the repository and run <span className="font-mono">docker compose up</span> to
+          grade locally.
         </p>
       )}
 

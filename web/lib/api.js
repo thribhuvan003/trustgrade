@@ -2,6 +2,12 @@
 // story: the sidebar switcher sets it and the server takes it at face value.
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
+// Running code needs a Docker daemon, which managed hosting does not give a
+// container, so grading alone is pointed at a machine that has one. Everything
+// else stays on the always-on API, which means the site keeps working even when
+// the grading host is unreachable. Both talk to the same database.
+const SANDBOX = process.env.NEXT_PUBLIC_SANDBOX_API_URL ?? BASE;
+
 export function currentRole() {
   if (typeof window === 'undefined') return 'STUDENT';
   return window.localStorage.getItem('trustgrade-role') ?? 'STUDENT';
@@ -11,37 +17,42 @@ export function setRole(role) {
   window.localStorage.setItem('trustgrade-role', role);
 }
 
-async function call(path, options = {}) {
+async function call(path, options = {}, base = BASE) {
   let response;
   try {
-    response = await fetch(BASE + path, {
+    response = await fetch(base + path, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-demo-role': currentRole(),
-        ...options.headers,
-      },
+      headers: { 'Content-Type': 'application/json', 'x-demo-role': currentRole(), ...options.headers },
     });
   } catch {
-    // fetch rejects with "Failed to fetch" when the API is down or blocked,
-    // which tells a student nothing about what to do next.
     throw new Error('The server is not responding. Nothing was saved. Check it is running, then try again.');
   }
 
   const body = await response.json().catch(() => null);
-  // The server always sends { error } with a real status, so the message it
-  // wrote is the one worth showing.
   // A reply arrived but carried no message we wrote, so say that rather than
   // reusing the wording for a server that never answered at all.
   if (!response.ok) throw new Error(body?.error ?? 'The server sent back something we could not read. Nothing was saved.');
   return body;
 }
 
-const post = (path, payload) => call(path, { method: 'POST', body: JSON.stringify(payload ?? {}) });
+const post = (path, payload, base) => call(path, { method: 'POST', body: JSON.stringify(payload ?? {}) }, base);
+
+// Whether the machine that runs code is currently reachable. The workspace asks
+// once on load so it can say plainly that grading is off rather than letting a
+// student press Submit and meet an error.
+export async function sandboxReachable() {
+  if (SANDBOX === BASE) return true;
+  try {
+    const response = await fetch(SANDBOX.replace(/\/api$/, '/'), { signal: AbortSignal.timeout(6000) });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
 export const getProblem = (id) => call(`/problems/${id}`);
-export const runVisibleTests = (problemId, code) => post('/submissions/run', { problemId, code });
-export const submitSolution = (problemId, code) => post('/submissions', { problemId, code });
+export const runVisibleTests = (problemId, code) => post('/submissions/run', { problemId, code }, SANDBOX);
+export const submitSolution = (problemId, code) => post('/submissions', { problemId, code }, SANDBOX);
 export const getSubmissions = () => call('/submissions');
 export const getFeedback = (id) => post(`/submissions/${id}/feedback`);
 export const getDoubts = () => call('/doubts');
