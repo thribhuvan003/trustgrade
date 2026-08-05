@@ -41,6 +41,28 @@ npm run attack    # fires every defence live and prints what happened
 
 Screenshots of all four pages are in [docs/screenshots](docs/screenshots).
 
+## What this implements, and where
+
+Built in one 24-hour sitting.
+
+| Requirement | Where it lives |
+|---|---|
+| Student submits code, runs test cases | `web/app/solve` · `POST /api/submissions/run` and `POST /api/submissions` |
+| Store results and submission history | `Submission` model · `GET /api/submissions` · `web/app/submissions` |
+| Student posts doubts to a board | `POST /api/doubts` · `web/app/doubts` |
+| Display submissions and doubt board | those two pages, both on live endpoints |
+| AI feedback on code quality | `services/llm.js` → `reviewCode` · `POST /api/submissions/:id/feedback` |
+| AI drafts answers to doubts | `services/llm.js` → `answerDoubt`, called when a doubt is posted |
+| Draft → pending → approved | `AnswerStatus` enum, `services/approval.js`, and the database trigger |
+| Teacher approves, edits, or rejects | `web/app/review` · `POST /api/review/:id/approve` and `/reject` |
+| Sandboxed, safe code execution | `services/sandbox.js` · `sandbox/Dockerfile.runner` |
+| Test-case grading engine and storage | `services/grader.js` · `TestCase` and `Submission.results` |
+| LLM integration with response validation | Zod `.strict()` schemas in `llm.js`, rejected on mismatch, never repaired |
+| Guard against prompt injection | risk scan, delimited input, reply discarded if it echoes the prompt, human approval |
+| Enforce approval state machine in DB | `migrations/*_add_answer_guards` — trigger, CHECK constraint, partial unique index |
+
+Stack is Next.js, Express, PostgreSQL and Prisma, with an OpenAI-compatible LLM client.
+
 ## Architecture
 
 ```
