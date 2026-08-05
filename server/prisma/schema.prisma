@@ -106,6 +106,9 @@ model Answer {
   status        AnswerStatus       @default(DRAFT)
   version       Int                @default(0)
   riskFlags     String[]
+  // What the model said about its own answer, kept so a teacher can weigh the
+  // draft without reading it in full. "unknown" when no model produced it.
+  confidence    String             @default("unknown")
   model         String
   promptVersion String
   createdAt     DateTime           @default(now())

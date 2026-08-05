@@ -64,6 +64,7 @@ router.post('/', async (req, res) => {
       doubtId: doubt.id,
       aiDraft: drafted.draft,
       riskFlags: drafted.riskFlags,
+      confidence: drafted.confidence,
       model: drafted.model,
       promptVersion: drafted.promptVersion,
     },

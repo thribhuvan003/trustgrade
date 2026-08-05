@@ -95,9 +95,9 @@ async function ask(system, user, schema) {
 
 // Every path returns the same shape, so callers never branch on whether the
 // model answered. Grading and the doubt board work with it entirely offline.
-function result(draft, riskFlags, usedModel) {
+function result(draft, riskFlags, usedModel, confidence = 'unknown') {
   const model = usedModel ? (process.env.LLM_MODEL ?? 'unknown') : 'none';
-  return { draft, riskFlags, model, promptVersion: PROMPT_VERSION };
+  return { draft, riskFlags, model, promptVersion: PROMPT_VERSION, confidence };
 }
 
 const OFFLINE_DOUBT = 'No draft was generated. A teacher will answer this question directly.';
@@ -116,11 +116,9 @@ export async function answerDoubt({ title, body, codeSnippet }) {
   );
 
   if (!reply) return result(OFFLINE_DOUBT, riskFlags, false);
-  return result(
-    `${reply.answer}\n\nCaveats: ${reply.caveats}\n\nModel confidence: ${reply.confidence}`,
-    riskFlags,
-    true,
-  );
+  // Confidence is stored as its own column, so it stays out of the draft text
+  // a teacher edits before publishing.
+  return result(`${reply.answer}\n\nCaveats: ${reply.caveats}`, riskFlags, true, reply.confidence);
 }
 
 export async function reviewCode(code) {

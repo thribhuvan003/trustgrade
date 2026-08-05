@@ -35,18 +35,22 @@ const trail = {
 router.get('/queue', async (_req, res) => {
   const waiting = await prisma.answer.findMany({
     where: { status: 'PENDING_REVIEW' },
-    orderBy: { createdAt: 'asc' },
     include: {
       transitions: trail,
       doubt: { include: { user: { select: { name: true } } } },
     },
   });
 
+  // Flagged answers first, then oldest. A teacher should meet the questions
+  // that tried something before the ones that did not.
+  waiting.sort((a, b) => b.riskFlags.length - a.riskFlags.length || a.createdAt - b.createdAt);
+
   return res.json(waiting.map((answer) => ({
     id: answer.id,
     version: answer.version,
     aiDraft: answer.aiDraft,
     riskFlags: answer.riskFlags,
+    confidence: answer.confidence,
     model: answer.model,
     promptVersion: answer.promptVersion,
     createdAt: answer.createdAt,
